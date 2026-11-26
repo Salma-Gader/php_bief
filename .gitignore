@@ -1,0 +1,16 @@
+# Local configuration holds database credentials and secrets: never commit it.
+/config/config.php
+
+# Runtime logs (keep the folder itself)
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Dependencies (only if Composer is added later, e.g. for PHPMailer)
+/vendor/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp

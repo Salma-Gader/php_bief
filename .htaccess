@@ -1,0 +1,13 @@
+# Best setup: point the web server's DocumentRoot at public/ so nothing else is reachable.
+# This file is a safety net for when the whole project is copied into XAMPP's htdocs.
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Block private folders and dotfiles (.git, .htaccess, ...).
+    RewriteRule ^(config|src|database|bin|storage)(/|$) - [F,L]
+    RewriteRule (^|/)\. - [F,L]
+    # Send the site root to the public folder.
+    RewriteRule ^$ public/ [L]
+</IfModule>
