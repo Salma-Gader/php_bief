@@ -75,7 +75,7 @@ $restaurantSchema = [
     <script type="application/ld+json"><?= json_encode($restaurantSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_PRETTY_PRINT) ?></script>
 
     <link rel="preload" href="assets/fonts/josefin-sans-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/img/hero-strait.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="assets/img/hero-strait.webp" as="image" type="image/webp">
     <link rel="stylesheet" href="assets/css/main.css">
     <!-- type="module" runs the script after the HTML is parsed (like defer) and keeps its variables private. -->
     <script type="module" src="assets/js/booking.js"></script>
@@ -226,10 +226,14 @@ $restaurantSchema = [
                             <p class="field__error" id="message-error"></p>
                         </div>
 
-                        <!-- Honeypot: hidden from people, but spam bots fill every field. -->
+                        <!--
+                            Honeypot: spam bots fill every field they find in the HTML; people never see this one.
+                            display:none + a name autofill does not recognise (not "website" or "url"),
+                            so the browser's autofill never fills it for a real guest.
+                        -->
                         <div class="hp" aria-hidden="true">
-                            <label for="website">Leave this field empty</label>
-                            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+                            <label for="sb_extra">Leave this field empty</label>
+                            <input id="sb_extra" name="sb_extra" type="text" tabindex="-1" autocomplete="off">
                         </div>
                     </div>
 

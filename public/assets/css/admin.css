@@ -84,9 +84,20 @@
 }
 
 .admin-bar__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .3em;
+    min-height: 44px; /* comfortable tap target */
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.125rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.admin-bar__brand:hover {
+    text-decoration: underline;
+    text-underline-offset: .25em;
 }
 
 .admin-bar__brand span {

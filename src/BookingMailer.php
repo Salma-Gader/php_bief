@@ -5,13 +5,15 @@ use PHPMailer\PHPMailer\Exception as MailException;
 use PHPMailer\PHPMailer\PHPMailer;
 
 /**
- * Sends the guest an email after a booking is saved.
+ * Emails sent to the guest:
+ *  1. "We received your booking request": right after the booking form is sent.
+ *  2. "Your table is confirmed": when staff confirm the booking in the back-office.
  *
  * PHPMailer (installed with Composer) talks to an SMTP server set in config:
  * Mailpit on a development PC, the real mail provider in production.
  *
- * The email is a bonus: if it fails, the booking is still saved and the guest
- * still sees the confirmation on the page. The error goes to the log.
+ * Emails are a bonus: if one fails, the booking or the confirmation still
+ * stands. The error goes to the log and the method returns false.
  */
 final class BookingMailer
 {
@@ -20,10 +22,35 @@ final class BookingMailer
         return (bool) config('mail.enabled', false) && class_exists(PHPMailer::class);
     }
 
-    /**
-     * @return bool true when the email was handed to the mail server
-     */
+    /** Email 1: sent by api/book.php after a booking is saved (status "new"). */
     public static function sendRequestReceived(array $booking, string $reference): bool
+    {
+        return self::send(
+            $booking,
+            "Your Sunset Brunch booking request {$reference}",
+            'We received your booking request',
+            'thank you for booking Sunday brunch with us. Our team will review your request and confirm your table soon.',
+            $reference
+        );
+    }
+
+    /** Email 2: sent by admin/status.php when staff confirm a booking. */
+    public static function sendBookingConfirmed(array $booking, string $reference): bool
+    {
+        return self::send(
+            $booking,
+            "Your table is confirmed: Sunset Brunch {$reference}",
+            'Your table is confirmed',
+            'good news: your table for Sunday brunch is confirmed. We look forward to welcoming you.',
+            $reference
+        );
+    }
+
+    /**
+     * Build and send one email. Shared by both emails, so the SMTP settings,
+     * the layout and the escaping exist in one place only.
+     */
+    private static function send(array $booking, string $subject, string $heading, string $intro, string $reference): bool
     {
         if (!self::isEnabled()) {
             return false;
@@ -40,22 +67,22 @@ final class BookingMailer
             $mail->SMTPAuth = $mail->Username !== '';
             $mail->SMTPSecure = (string) config('mail.encryption', ''); // '', 'tls' or 'ssl'
             $mail->SMTPAutoTLS = $mail->SMTPSecure !== '';
-            $mail->Timeout = 5; // seconds; PHPMailer's default (300) would make a guest wait minutes if the server is down
+            $mail->Timeout = 5; // seconds; PHPMailer's default (300) would make people wait minutes if the server is down
             $mail->CharSet = PHPMailer::CHARSET_UTF8;
 
             $mail->setFrom((string) config('mail.from_email'), (string) config('mail.from_name', 'Sunset Brunch'));
             $mail->addAddress($booking['email'], $booking['full_name']);
 
-            $mail->Subject = "Your Sunset Brunch booking request {$reference}";
+            $mail->Subject = $subject;
             $mail->isHTML(true);
-            $mail->Body = self::htmlBody($booking, $reference);
-            $mail->AltBody = self::textBody($booking, $reference); // for mail apps that show plain text
+            $mail->Body = self::htmlBody($booking, $heading, $intro, $reference);
+            $mail->AltBody = self::textBody($booking, $heading, $intro, $reference); // for mail apps that show plain text
 
             $mail->send();
 
             return true;
         } catch (MailException $e) {
-            error_log("Booking email for {$reference} failed: " . $e->getMessage());
+            error_log("Email \"{$heading}\" for {$reference} failed: " . $e->getMessage());
 
             return false;
         }
@@ -76,7 +103,7 @@ final class BookingMailer
         ], fn ($value) => $value !== '');
     }
 
-    private static function htmlBody(array $booking, string $reference): string
+    private static function htmlBody(array $booking, string $heading, string $intro, string $reference): string
     {
         // Every guest value goes through e(): the email is HTML too, so the same XSS rule applies.
         $rows = '';
@@ -88,17 +115,16 @@ final class BookingMailer
         return '<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#F4F7F9;font-family:Segoe UI,Arial,sans-serif;color:#0E2A4A">'
              . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:28px">'
              . '<p style="margin:0;font-size:20px;font-weight:700;color:#12355B">Sunset Brunch</p>'
-             . '<h1 style="margin:16px 0 8px;font-size:22px">We received your booking request</h1>'
-             . '<p style="margin:0 0 16px;line-height:1.5">Hello ' . e($booking['full_name']) . ', thank you for booking Sunday brunch with us. '
-             . 'Our team will review your request and confirm your table soon.</p>'
+             . '<h1 style="margin:16px 0 8px;font-size:22px">' . e($heading) . '</h1>'
+             . '<p style="margin:0 0 16px;line-height:1.5">Hello ' . e($booking['full_name']) . ', ' . e($intro) . '</p>'
              . '<table role="presentation" style="border-collapse:collapse;font-size:15px">' . $rows . '</table>'
              . '<p style="margin:20px 0 0;line-height:1.5;color:#3F5873">Need to change something? Reply to this email and include your reference.</p>'
              . '</div></body></html>';
     }
 
-    private static function textBody(array $booking, string $reference): string
+    private static function textBody(array $booking, string $heading, string $intro, string $reference): string
     {
-        $lines = ["Hello {$booking['full_name']},", '', 'Thank you for booking Sunday brunch at Sunset Brunch.', 'Our team will review your request and confirm your table soon.', ''];
+        $lines = [$heading, '', "Hello {$booking['full_name']}, {$intro}", ''];
         foreach (self::details($booking, $reference) as $label => $value) {
             $lines[] = "{$label}: {$value}";
         }

@@ -53,9 +53,19 @@ try {
 $ref = booking_reference($id);
 $booking = $outcome['booking'] ?? null;
 
+// Confirmed: tell the guest by email. This runs after the slot lock is released,
+// so a slow mail server never holds up guest bookings. The confirmation stands
+// even if the email fails.
+$emailNote = '';
+if ($outcome['result'] === 'updated' && $newStatus === 'confirmed' && BookingMailer::isEnabled()) {
+    $emailNote = BookingMailer::sendBookingConfirmed($booking, $ref)
+        ? " Confirmation email sent to {$booking['email']}."
+        : ' The confirmation email could not be sent (see the error log); contact the guest by phone.';
+}
+
 match ($outcome['result']) {
     'updated' => flash('success', $newStatus === 'confirmed'
-        ? "{$ref} confirmed."
+        ? "{$ref} confirmed.{$emailNote}"
         : "{$ref} cancelled. Its {$booking['guests']} " . ($booking['guests'] === 1 ? 'seat is' : 'seats are') . ' free again.'),
     'unchanged' => flash('info', "{$ref} is already {$newStatus}."),
     'full' => flash('error', sprintf(

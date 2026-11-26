@@ -76,4 +76,17 @@ if (PHP_SAPI !== 'cli') {
     header('X-Frame-Options: DENY');
     // Only allow resources from our own site. No inline scripts and no third-party code.
     header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+
+    // A folder asked for without its trailing slash ("/admin" instead of "/admin/"):
+    // PHP's built-in server still runs admin/index.php but, unlike Apache, does not
+    // add the slash. The browser then resolves relative links (status.php,
+    // logout.php...) from the site root, and forms land on the home page.
+    // Redirect to the address with the slash, as Apache does.
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    $scriptFolder = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+    if ($scriptFolder !== '' && $requestPath === $scriptFolder && basename($_SERVER['SCRIPT_NAME']) === 'index.php') {
+        $query = $_SERVER['QUERY_STRING'] ?? '';
+        header('Location: ' . $scriptFolder . '/' . ($query !== '' ? '?' . $query : ''), true, 301);
+        exit;
+    }
 }

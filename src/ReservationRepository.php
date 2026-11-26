@@ -118,7 +118,7 @@ final class ReservationRepository
     public function find(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, full_name, booking_date, time_slot, guests, status FROM reservations WHERE id = ?'
+            'SELECT id, full_name, phone, email, booking_date, time_slot, guests, message, status FROM reservations WHERE id = ?'
         );
         $stmt->execute([$id]);
 

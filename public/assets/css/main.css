@@ -199,7 +199,7 @@ img, svg {
     /* A gradient on top of the illustration keeps the text readable. */
     background:
         linear-gradient(180deg, rgba(14, 42, 74, .55) 0%, rgba(14, 42, 74, 0) 55%),
-        url("../img/hero-strait.svg") 78% 100% / cover no-repeat,
+        url("../img/hero-strait.webp") 78% 100% / cover no-repeat,
         var(--strait-deep);
 }
 
@@ -274,7 +274,7 @@ img, svg {
     flex: 0 0 4.5rem;
     /* Fully rounded top corners on a narrow box draw a semicircular arch. */
     border-radius: 999px 999px 0 0;
-    background: var(--doorway) url("../img/zellige.svg") center / 40px 40px;
+    background: var(--doorway) url("../img/zellige.webp") center / 40px 40px;
 }
 
 .dish:nth-child(3n + 2) .dish__window {
@@ -409,6 +409,15 @@ img, svg {
     border-color: var(--doorway);
 }
 
+/* Date fields: Chrome's calendar icon is its own keyboard stop, and the field
+   does not match :focus while the icon has focus. It does match :focus-within,
+   so the ring stays visible on every stop inside the date field. */
+.field input[type="date"]:focus-within {
+    outline: 3px solid var(--doorway);
+    outline-offset: 1px;
+    border-color: var(--doorway);
+}
+
 .field [aria-invalid="true"] {
     border-color: var(--error);
 }
@@ -498,13 +507,10 @@ img, svg {
     border-color: var(--error);
 }
 
-/* Honeypot: moved off-screen rather than display:none, which some bots detect */
+/* Honeypot: display:none, so browsers never autofill it (an off-screen field
+   was being filled by autofill, which blocked real guests). */
 .hp {
-    position: absolute;
-    left: -10000px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+    display: none;
 }
 
 .booking-form__submit {
@@ -570,7 +576,7 @@ img, svg {
            bright horizon. It fades out before the terrace wall at the bottom. */
         background:
             radial-gradient(ellipse 55% 50% at 18% 48%, rgba(14, 42, 74, .7) 0%, rgba(14, 42, 74, 0) 100%),
-            url("../img/hero-strait.svg") 78% 100% / cover no-repeat,
+            url("../img/hero-strait.webp") 78% 100% / cover no-repeat,
             var(--strait-deep);
     }
 

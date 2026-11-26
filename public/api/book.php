@@ -23,9 +23,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(405, ['ok' => false, 'message' => 'Send bookings with the booking form.']);
 }
 
-// 2. Honeypot: pretend it worked so the bot learns nothing, but save nothing.
-if (($_POST['website'] ?? '') !== '') {
-    error_log('Booking blocked by honeypot.');
+// 2. Honeypot: the hidden "sb_extra" field must stay empty.
+$honeypot = $_POST['sb_extra'] ?? '';
+if ($honeypot !== '') {
+    error_log('Booking blocked by honeypot. Hidden field contained: ' . substr(json_encode($honeypot, JSON_UNESCAPED_UNICODE), 0, 80));
+
+    if (config('app.debug')) {
+        // Development only: say clearly what happened, so a test is not mistaken for a real booking.
+        json_response(422, [
+            'ok'      => false,
+            'message' => 'Debug mode: blocked by the spam filter because the hidden field was filled (often by an auto-fill tool). Nothing was saved.',
+        ]);
+    }
+    // Real site: pretend it worked, so the bot learns nothing, but save nothing.
     json_response(200, ['ok' => true, 'message' => 'Your booking request has been sent.']);
 }
 
