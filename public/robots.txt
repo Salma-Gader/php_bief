@@ -1,0 +1,4 @@
+# The landing page can be indexed; the back-office and the booking API cannot.
+User-agent: *
+Disallow: /admin/
+Disallow: /api/

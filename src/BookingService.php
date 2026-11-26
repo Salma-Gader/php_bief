@@ -42,4 +42,57 @@ final class BookingService
             }
         );
     }
+
+    /**
+     * Back-office: confirm or cancel a booking.
+     *
+     * Runs under the same slot lock as reserve(), so a guest booking and an
+     * admin action on the same sitting can never overlap.
+     *
+     * @return array{result: string, booking?: array, remaining?: int}
+     *         result = 'updated' | 'unchanged' | 'full' | 'not_found' | 'invalid'
+     */
+    public function changeStatus(int $id, string $newStatus): array
+    {
+        // Staff can only confirm or cancel; "new" is set by the booking form.
+        if (!in_array($newStatus, ['confirmed', 'cancelled'], true)) {
+            return ['result' => 'invalid'];
+        }
+
+        $booking = $this->reservations->find($id);
+        if ($booking === null) {
+            return ['result' => 'not_found'];
+        }
+
+        $capacity = (int) config('booking.slot_capacity');
+
+        return SlotLock::run(
+            $this->pdo,
+            $booking['booking_date'],
+            $booking['time_slot'],
+            function () use ($id, $newStatus, $capacity): array {
+                // Read again inside the lock: someone may have changed it a moment ago.
+                $booking = $this->reservations->find($id);
+                if ($booking === null) {
+                    return ['result' => 'not_found'];
+                }
+                if ($booking['status'] === $newStatus) {
+                    return ['result' => 'unchanged', 'booking' => $booking];
+                }
+
+                // A cancelled booking does not hold seats. Confirming it takes them
+                // again, so the 40-guest limit is checked like for a new booking.
+                if ($booking['status'] === 'cancelled') {
+                    $booked = $this->reservations->activeGuests($booking['booking_date'], $booking['time_slot']);
+                    if ($booked + $booking['guests'] > $capacity) {
+                        return ['result' => 'full', 'booking' => $booking, 'remaining' => max(0, $capacity - $booked)];
+                    }
+                }
+
+                $this->reservations->updateStatus($id, $newStatus);
+
+                return ['result' => 'updated', 'booking' => $booking];
+            }
+        );
+    }
 }

@@ -7,15 +7,72 @@ $menu    = require APP_ROOT . '/config/menu.php';
 $slots   = config('booking.slots');
 $minDate = BookingCalendar::firstBookableDate()->format('Y-m-d');
 $maxDate = BookingCalendar::lastBookableDate()->format('Y-m-d');
+
+// --- SEO ---
+$pageTitle = 'Sunset Brunch, Tanger: book a table for Sunday brunch';
+$pageDescription = 'Moroccan brunch classics every Sunday in Tanger. Three sittings at 12:00, 13:30 and 15:00. Book your table online.';
+$shareImage = app_url('assets/img/og-image.jpg');
+$prices = array_column($menu, 'price');
+
+// Restaurant structured data (schema.org) for search engines. Only facts the
+// site really has: no street address or closing time is invented.
+$restaurantSchema = [
+    '@context'            => 'https://schema.org',
+    '@type'               => 'Restaurant',
+    'name'                => 'Sunset Brunch',
+    'description'         => $pageDescription,
+    'url'                 => app_url(),
+    'image'               => $shareImage,
+    'servesCuisine'       => ['Moroccan', 'Brunch'],
+    'priceRange'          => min($prices) . '–' . max($prices) . ' MAD',
+    'acceptsReservations' => app_url('#booking'),
+    'address'             => [
+        '@type'           => 'PostalAddress',
+        'addressLocality' => 'Tanger',
+        'addressCountry'  => 'MA',
+    ],
+    'hasMenu' => [
+        '@type'          => 'Menu',
+        'name'           => 'The Sunday menu',
+        'hasMenuSection' => [
+            '@type'       => 'MenuSection',
+            'name'        => 'Brunch',
+            'hasMenuItem' => array_map(static fn (array $dish): array => [
+                '@type'       => 'MenuItem',
+                'name'        => $dish['name'],
+                'description' => $dish['description'],
+                'offers'      => ['@type' => 'Offer', 'price' => (string) $dish['price'], 'priceCurrency' => 'MAD'],
+            ], $menu),
+        ],
+    ],
+];
 ?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sunset Brunch, Tanger: book a table for Sunday brunch</title>
-    <meta name="description" content="Moroccan brunch classics every Sunday in Tanger. Three sittings at 12:00, 13:30 and 15:00. Book your table online.">
+    <title><?= e($pageTitle) ?></title>
+    <meta name="description" content="<?= e($pageDescription) ?>">
     <meta name="theme-color" content="#12355B">
+    <link rel="canonical" href="<?= e(app_url()) ?>">
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+    <!-- Open Graph / Twitter: the preview card shown when the link is shared -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Sunset Brunch">
+    <meta property="og:title" content="<?= e($pageTitle) ?>">
+    <meta property="og:description" content="<?= e($pageDescription) ?>">
+    <meta property="og:url" content="<?= e(app_url()) ?>">
+    <meta property="og:image" content="<?= e($shareImage) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Illustration of the Strait of Gibraltar at sunset seen from the Tanger medina">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- JSON_HEX_TAG turns < and > into < / >, so no value can close this <script> early -->
+    <script type="application/ld+json"><?= json_encode($restaurantSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_PRETTY_PRINT) ?></script>
 
     <link rel="preload" href="assets/fonts/josefin-sans-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/img/hero-strait.svg" as="image" type="image/svg+xml">

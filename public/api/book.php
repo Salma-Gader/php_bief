@@ -85,11 +85,16 @@ if ($result['status'] === 'full') {
     ]);
 }
 
-$reference = sprintf('SB-%06d', $result['id']);
+$reference = booking_reference($result['id']);
 $guests = $booking['guests'] === 1 ? '1 guest' : "{$booking['guests']} guests";
+
+// The booking is saved; the email is a bonus and never turns this into an error.
+$emailSent = BookingMailer::sendRequestReceived($booking, $reference);
 
 json_response(201, [
     'ok'        => true,
     'reference' => $reference,
-    'message'   => "Thank you! Your request for {$guests} at {$sitting} has been received. Your reference is {$reference}. Our team will confirm it soon.",
+    'message'   => "Thank you! Your request for {$guests} at {$sitting} has been received. Your reference is {$reference}. "
+                 . ($emailSent ? "We sent the details to {$booking['email']}. " : '')
+                 . 'Our team will confirm it soon.',
 ]);

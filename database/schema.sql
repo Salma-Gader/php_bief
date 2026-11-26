@@ -4,6 +4,8 @@
 -- Import: mysql -u root -p < database/schema.sql
 -- No admin account is created here. Create one with: php bin/create-admin.php <username>
 
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS sunset_brunch
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;

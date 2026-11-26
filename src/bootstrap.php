@@ -62,6 +62,12 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// Composer packages (PHPMailer). Optional: without `composer install` the site
+// still works, it just sends no confirmation email.
+if (is_file(APP_ROOT . '/vendor/autoload.php')) {
+    require APP_ROOT . '/vendor/autoload.php';
+}
+
 // --- Security headers (web requests only) ----------------------------------
 if (PHP_SAPI !== 'cli') {
     header_remove('X-Powered-By');
