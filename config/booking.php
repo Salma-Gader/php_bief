@@ -23,4 +23,13 @@ return [
 
     // ISO-8601 day of week: 1 = Monday ... 7 = Sunday.
     'open_weekday' => 7,
+
+    // How long a booking waits for another booking of the same sitting to finish.
+    'lock_timeout_seconds' => 5,
+
+    // Anti-spam: at most this many saved bookings from one visitor (IP) per period.
+    'rate_limit' => [
+        'max_bookings' => 5,
+        'per_minutes'  => 10,
+    ],
 ];

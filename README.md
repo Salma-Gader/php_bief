@@ -61,3 +61,9 @@ storage/logs/      PHP error log (git-ignored)
 - **Booking window:** bookings are accepted at most 90 days ahead (`booking_window_days` in `config/booking.php`).
 - **Same-day bookings:** when today is Sunday, today can be booked for slots that have not started yet.
 - **Timezone:** all dates and times use `Africa/Casablanca`, in both PHP and MySQL.
+- **Content:** the restaurant is fictional; the six dishes and prices in `config/menu.php` are sample content.
+
+## Credits
+
+- Hero illustration and zellige tile: original SVGs made for this project.
+- Font: [Josefin Sans](https://fonts.google.com/specimen/Josefin+Sans) (SIL Open Font License), self-hosted from `@fontsource-variable/josefin-sans@5.3.0`.

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <!-- Repeating eight-point star tile, drawn white and semi-transparent so it
+       sits on top of any background colour. -->
+  <g fill="#fff" fill-opacity=".22">
+    <path d="M20 6l4.1 9.9L34 20l-9.9 4.1L20 34l-4.1-9.9L6 20l9.9-4.1Z"/>
+    <rect x="12" y="12" width="16" height="16" transform="rotate(45 20 20)" fill-opacity=".5"/>
+    <circle cx="0" cy="0" r="4"/>
+    <circle cx="40" cy="0" r="4"/>
+    <circle cx="0" cy="40" r="4"/>
+    <circle cx="40" cy="40" r="4"/>
+  </g>
+</svg>

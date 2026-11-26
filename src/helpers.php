@@ -30,3 +30,24 @@ function e(mixed $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
+/**
+ * Send a JSON answer with an HTTP status code, then stop the script.
+ */
+function json_response(int $status, array $payload): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+/**
+ * A secret-salted hash of the visitor's IP address.
+ * Lets us rate-limit by visitor without storing the real IP (privacy).
+ */
+function client_ip_hash(): string
+{
+    return hash_hmac('sha256', $_SERVER['REMOTE_ADDR'] ?? 'unknown', (string) config('security.ip_salt'));
+}
