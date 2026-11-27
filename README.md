@@ -6,9 +6,16 @@ and a private back-office where staff see and manage the bookings.
 Built for the ELH Groupe web developer test with **plain PHP 8, MySQL/MariaDB, HTML, CSS and
 vanilla JavaScript**. No framework, no page builder. The only package is PHPMailer, for the bonus emails.
 
-| Landing page | Booking on a phone | Back-office |
-|---|---|---|
-| ![Landing page](docs/screenshots/home.jpg) | ![Booking form on a phone](docs/screenshots/booking-mobile.jpg) | ![Back-office bookings list](docs/screenshots/admin.jpg) |
+| Landing page | The Sunday menu |
+|---|---|
+| ![Landing page: golden sky with the Sunset Brunch title](docs/screenshots/home.jpg) | ![Menu cards with arched photos](docs/screenshots/menu.jpg) |
+| **Booking on a phone** | **Back-office** |
+| ![Booking form on a phone, showing validation messages](docs/screenshots/booking-mobile.jpg) | ![Back-office bookings list](docs/screenshots/admin.jpg) |
+
+The landing page design is inspired by the "Golden Portal" template on MotionSites: a golden sky
+fading into deep oxblood sections, elegant serif titles, a floating pill menu, and its motion (smooth
+scrolling, clouds rising over the hero, titles rising line by line). Only the design and motion
+principles were reused; all code, artwork and text are original to this project.
 
 ---
 
@@ -18,9 +25,9 @@ vanilla JavaScript**. No framework, no page builder. The only package is PHPMail
 |---|---|
 | **Part 1: landing page** | |
 | Hero with name, tagline, background image, "Book a table" button scrolling to the form | `public/index.php` |
-| Menu: 6 dishes with name, description and price in MAD, as cards | `config/menu.php`, `public/index.php` |
+| Menu: 6 dishes with name, description and price in MAD, as cards (prices: see [Assumptions](#assumptions-and-decisions)) | `config/menu.php`, `public/index.php` |
 | Booking form: name, phone, email, date, sitting (12:00 / 13:30 / 15:00), guests (1–12), optional message | `public/index.php` |
-| Works on mobile, tablet and desktop (checked from 320 px to 1440 px) | `public/assets/css/main.css` |
+| Works on mobile, tablet and desktop (checked from 320 px to 1440 px) | `public/assets/css/site.css` |
 | JavaScript validation: required fields, email, phone, date not in the past and a Sunday | `public/assets/js/booking.js` |
 | Sent with `fetch` (no reload), clear success or error message | `public/assets/js/booking.js` |
 | **Part 2: back end** | |
@@ -38,7 +45,7 @@ vanilla JavaScript**. No framework, no page builder. The only package is PHPMail
 | CSV export of the (filtered) list | `public/admin/export.php` |
 | SEO: title, description, Open Graph, Restaurant JSON-LD | `public/index.php` |
 | Spam protection (honeypot + rate limit) and CSRF on the back-office | `public/api/book.php`, `src/Csrf.php` |
-| Lighthouse 90+ on mobile: **99–100 Performance, 100 Accessibility, Best Practices and SEO** | see [Checks](#checks-that-were-run) |
+| Lighthouse on mobile: **Performance 92 (median of 5, range 84–95), Accessibility, Best Practices and SEO 100** (see [Checks](#checks-that-were-run)) | `public/index.php`, `public/assets/css/site.css` |
 
 ---
 
@@ -172,6 +179,29 @@ stayed within the limit in every run.
 - "This Sunday" shortcut and CSV export of exactly what the list shows (UTF-8, `;` separator for Excel in French).
 - On phones and tablets each booking is a card; from 1200 px it is a table.
 
+### Motion (landing page)
+
+`public/assets/js/motion.js` uses **GSAP 3.15.1** (ScrollTrigger, SplitText) and **Lenis 1.3.27**, both
+self-hosted in `public/assets/vendor/` because the Content-Security-Policy only allows the site's own scripts.
+
+| Effect | How |
+|---|---|
+| Smooth, eased scrolling; menu links glide to their section and move keyboard focus there | Lenis, driven by GSAP's clock |
+| Hero: a wall of painted clouds rises faster than the page and covers the title; the text lags and fades; the doves fly up and away; the sky drifts slower (parallax) and breathes | ScrollTrigger timeline with `scrub` |
+| Hero: four painted doves glide across the sky (right to left, near the top and bottom so they never cross the title), rising, falling and leaning gently; far doves are smaller and slower | each dove drawn once on its own `<canvas>`, moved with GSAP transforms; paused off screen |
+| Hero title words rise from behind a mask on load | CSS (starts with the first paint, no script needed) |
+| Section titles rise line by line from behind a mask | SplitText `mask: "lines"`, reverted after the entrance |
+| Riad photo: the arch opens from the bottom, the photo zooms out, then moves slower than its frame | `clip-path` + scale, scrubbed parallax |
+| Menu cards and gallery photos open one after another | `clip-path`, `ScrollTrigger.batch` |
+| Q&A answers brighten as they reach the reading line; painted clouds hang over the section and sink | scrubbed opacity / parallax |
+| Clouds and doves through the whole page: painted clouds behind the riad arch, beside the menu title, after the last menu cards, over the Q&A and at the bottom of the booking section, each drifting at its own speed; in each of these sections a dove flies across the side or the top as you scroll (two in the menu) | scrubbed parallax; doves on `<canvas>`, paths follow the scroll |
+| Hovers: buttons fill from the bottom, links redraw their underline, photos zoom slightly | CSS transitions |
+
+Safeguards: the libraries load **after** the page has loaded (the first screen paints as fast as without
+them); only `transform`, `opacity` and `clip-path` are animated; endless drifts pause off screen; touch
+screens keep native scrolling. With **reduced motion** (or without JavaScript) nothing is downloaded and
+every element is simply shown. The booking form itself is never animated.
+
 ### Emails
 
 PHPMailer sends two emails over SMTP: **"We received your booking request"** after booking and
@@ -189,7 +219,11 @@ public/                  Web root: the only folder the browser can reach
   index.php              Landing page: hero, menu, booking form, SEO tags, JSON-LD
   api/book.php           Booking endpoint (JSON)
   admin/                 login.php, index.php (list), status.php (confirm/cancel), export.php (CSV), logout.php
-  assets/                css/, js/booking.js, img/ (WebP images + SVG sources), fonts/ (self-hosted)
+  assets/css/site.css    Landing page design (golden sky, menu, gallery, Q&A, booking form states)
+  assets/css/main.css    Back-office base styles (with admin.css); the landing page does not use it
+  assets/js/motion.js    Scroll motion of the landing page (GSAP + Lenis)
+  assets/vendor/         GSAP 3.15.1 (core, ScrollTrigger, SplitText) and Lenis 1.3.27, self-hosted
+  assets/                js/booking.js, img/ (WebP photos and artwork), fonts/ (self-hosted)
 src/
   bootstrap.php          Loaded first everywhere: config, time zone, error log, autoload, security headers
   Database.php           One shared PDO connection per request
@@ -222,14 +256,38 @@ audits with Lighthouse 13.6):
 
 | Check | Result |
 |---|---|
-| Lighthouse, mobile, home page (5 runs) | Performance **99–100**, Accessibility **100**, Best Practices **100**, SEO **100**; LCP 0.9 s, CLS 0 |
+| Lighthouse 13.6, mobile, home page, with the motion | Accessibility, Best Practices and SEO **100** in every run; LCP **0.9 s** in every run. Performance below (see [Lighthouse results](#lighthouse-results)) |
 | Widths 320, 390, 768, 1024, 1440 px (home, login, list, filtered list) | No horizontal scroll, buttons and form controls ≥ 44 px (inline text links excepted), no console errors |
-| Keyboard only | Booking and back-office (login, confirm) fully usable; visible focus ring on every stop |
+| Keyboard only | Booking and back-office (login, confirm) fully usable; visible focus ring on every stop; menu links glide to their section and the next Tab continues from there |
+| Motion | No console errors; booking form validation unchanged with smooth scrolling on; with reduced motion no library or cloud image is downloaded and nothing moves |
 | Form scenarios | Empty form, each invalid value, success, 422 / 409 / 429 / 500 / offline answers, double click sends once |
 | Server validator | Impossible dates (31 Feb), past Sunday, beyond 90 days, sitting already started, arrays instead of text… |
 | Capacity | 41 refused, exactly 40 accepted, cancelled seats freed, concurrent race (see above) |
 | Security | SQL-injection and `<script>` input stored as plain text; forged POST without CSRF token, GET requests and signed-out requests change nothing |
 | Emails | Both emails delivered to Mailpit; with the mail server stopped, bookings and confirmations still succeed |
+
+### Lighthouse results
+
+Lighthouse 13.6.0, mobile preset (simulated slow 4G, 4× CPU slowdown), headless Chromium, home page served
+by `php -S` on the development PC (Windows 11). Five runs per session; the median is the reference figure.
+
+| | Session A: clean | Session B: earlier |
+|---|---|---|
+| Conditions | Chrome fully exited (0 processes), CPU load 18% at the start | Chrome windows closed but ~17 background Chrome processes still running, CPU load 19–31% |
+| Performance, per run | 95, 94, 92, 84, 84 | 95, 96, 97, 76, 73 |
+| **Performance, median** | **92** (range 84–95) | **95** (range 73–97) |
+| Total Blocking Time, median | 350 ms (240–630) | 260 ms (180–1,570) |
+| Speed Index, median | 2.6 s | 3.0 s |
+| FCP / LCP | 0.9 s / 0.9 s in every run | 0.9 s / 0.9 s in every run |
+| CLS, median | 0.002 | 0.004 |
+| Accessibility / Best Practices / SEO | 100 / 100 / 100 in every run | 100 / 100 / 100 in every run |
+
+**Reading the two sessions:** the clean session is the more reliable figure. Its scores are much closer
+together (84–95 instead of 73–97), and no run had the random 1–2 s stall that caused session B's two low
+scores. Session B's higher median is within run-to-run variation: its three best runs simply had less
+blocking time. LCP, layout stability and the three other categories are identical in both sessions. The
+remaining variation is blocking time on the throttled CPU, mostly from the page's own layout and from
+loading the motion libraries (which happens after the page has loaded).
 
 **Try it yourself:** book a table with a free sitting (for example 15:00), confirm it in the back-office,
 then open Mailpit to see both emails. To see the limit, import the demo data: the 13:30 sitting on the
@@ -247,7 +305,9 @@ first Sunday is full (40/40) and refuses any new booking.
 - **Phone numbers:** Moroccan (`06…`, `+212 6…`) or any international number in `+` format. Stored without spaces.
 - **Honeypot in debug mode:** with `debug` on, a blocked booking shows a clear message instead of a fake
   success, so a test with an auto-fill tool is not mistaken for a real booking.
-- **Content:** the restaurant is fictional; the six dishes and their prices are sample content.
+- **Content:** the photos were supplied for the project. The six menu cards describe only what their photos
+  show. Prices are added in `config/menu.php` when the venue provides them; until then a card shows
+  "Price coming soon" and the SEO schema leaves that price out instead of inventing one.
 - **Why a named lock rather than `SELECT … FOR UPDATE`:** it also covers an empty sitting (no rows to lock
   yet) and is simple to reason about.
 
@@ -274,13 +334,22 @@ Updating PHP (or installing the PECL `timezonedb` extension) fixes it without an
 - **French and Arabic versions** (with right-to-left layout), since most guests in Tanger would expect them.
 - **Production setup:** HTTPS with HSTS, configuration from environment variables, a Docker Compose file
   (PHP, MariaDB, Mailpit) so the project runs with one command, and database migrations.
-- **Real photos** of the dishes and the terrace, delivered as responsive WebP/AVIF.
+- **AVIF versions** of the photos next to the WebP ones, and a seats-left badge on each menu sitting.
 
 ---
 
 ## Credits
 
-- Hero illustration, zellige tile and favicon: original SVGs made for this project (rendered to WebP for speed).
-- Font: [Josefin Sans](https://fonts.google.com/specimen/Josefin+Sans) (SIL Open Font License), self-hosted
+- Design inspiration: the "Golden Portal" landing page on [MotionSites](https://motionsites.ai) (layout and
+  mood only; no code, images or text were copied).
+- Hero sky: a painted sunset generated with an AI image tool and supplied for the project (no template
+  artwork was used as a reference), baked with a fade into oxblood as an opaque WebP.
+- Clouds (cloud wall, Q&A clouds, booking section) and doves: painted images generated with an AI image tool
+  and supplied for the project, cut out from their plain green background for the site. Favicon: original SVG.
+- Photos: supplied for the project, resized to WebP.
+- Fonts (SIL Open Font License, self-hosted): [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond)
+  from `@fontsource-variable/cormorant-garamond@5.3.0`, and [Josefin Sans](https://fonts.google.com/specimen/Josefin+Sans)
   from `@fontsource-variable/josefin-sans@5.3.0`.
 - Email: [PHPMailer](https://github.com/PHPMailer/PHPMailer) 7.2.0 (LGPL 2.1), installed with Composer.
+- Motion: [GSAP](https://gsap.com) 3.15.1 with ScrollTrigger and SplitText ([GSAP standard license](https://gsap.com/standard-license),
+  free to use) and [Lenis](https://github.com/darkroomengineering/lenis) 1.3.27 (MIT).

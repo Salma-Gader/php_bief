@@ -1,0 +1,1113 @@
+/* ==========================================================================
+   Sunset Brunch: landing page ("golden sky" design)
+   Used by public/index.php only. The back-office keeps main.css + admin.css.
+
+   Design: a golden sky with clouds whose bottom fades into deep oxblood
+   sections. Elegant serif titles, arched photo "portals", a floating pill menu.
+   Motion: the hero entrance and hovers are CSS; everything linked to scrolling
+   is GSAP + ScrollTrigger + Lenis in assets/js/motion.js, which adds the class
+   "has-motion" to <html>. Nothing moves for people who ask for reduced motion.
+   ========================================================================== */
+
+/* ---------- Fonts (self-hosted) ---------- */
+@font-face {
+    font-family: "Cormorant Garamond";
+    src: url("../fonts/cormorant-garamond-latin-wght-normal.woff2") format("woff2");
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Cormorant Garamond";
+    src: url("../fonts/cormorant-garamond-latin-wght-italic.woff2") format("woff2");
+    font-weight: 300 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Josefin Sans";
+    src: url("../fonts/josefin-sans-latin-wght.woff2") format("woff2");
+    font-weight: 100 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ---------- Design tokens ---------- */
+:root {
+    --oxblood: #3A0D0B;
+    --oxblood-deep: #2A0807;
+    --ember: #5A1C14;
+    --gold: #E9A93C;
+    --amber: #F4C46B;
+    --sky: #7FA6D6;
+    --cream: #F7ECDD;
+    --cream-soft: #E3CDB6;   /* secondary text on oxblood (contrast 9:1) */
+    --ink: #2A0807;
+    --ink-soft: #6B3A2E;
+    --line-dark: rgba(247, 236, 221, .22);
+    --error: #A3241A;
+    --error-bg: #FBE7E3;
+    --success: #1E6B52;
+    --success-bg: #E4F3EC;
+    --focus: #F4C46B;        /* focus ring on dark backgrounds */
+    --focus-on-light: #8A2A1B;
+
+    --serif: "Cormorant Garamond", "Times New Roman", serif;
+    --sans-bold: "Josefin Sans", "Century Gothic", sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --gutter: 1rem;
+    --radius: 14px;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--oxblood);
+}
+
+body {
+    margin: 0;
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--cream);
+    background: var(--oxblood);
+    overflow-x: hidden;
+}
+
+h1, h2, h3, p, dl, dd, figure { margin: 0; }
+
+img { display: block; max-width: 100%; height: auto; }
+
+a { color: inherit; }
+
+:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+}
+
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: var(--gutter);
+    z-index: 50;
+    padding: .75rem 1rem;
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: 999px;
+}
+
+.skip-link:focus { top: var(--gutter); }
+
+/* Small spaced capitals above titles (the template's label style) */
+.eyebrow {
+    font-family: var(--sans-bold);
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--amber);
+}
+
+/* Elegant serif section titles */
+.display {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 1.6rem + 4.5vw, 4.75rem);
+    line-height: 1;
+    letter-spacing: -.01em;
+    text-wrap: balance; /* no single word left alone on the last line */
+}
+
+/* ---------- Buttons and links ---------- */
+.pill-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: .8rem 1.9rem .7rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-family: var(--sans-bold);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition: color .45s cubic-bezier(.16, 1, .3, 1), border-color .45s ease;
+}
+
+/* Hover: cream fills the pill from the bottom, like a rising tide */
+.pill-button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--cream);
+    transform: translateY(101%);
+    border-radius: inherit;
+    transition: transform .55s cubic-bezier(.16, 1, .3, 1);
+}
+
+.pill-button:hover {
+    color: var(--ink);
+    border-color: var(--cream);
+}
+
+.pill-button:hover::before { transform: translateY(0); }
+
+.pill-button--small { min-height: 44px; padding: .65rem 1.5rem .55rem; }
+
+/* Underline drawn as a line that retracts and redraws on hover */
+.text-link {
+    display: inline-block;
+    padding-block: .75rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) left calc(100% - .55rem) / 100% 1px no-repeat;
+}
+
+.text-link:hover { animation: underline-redraw .7s cubic-bezier(.65, 0, .35, 1); }
+
+@keyframes underline-redraw {
+    0%   { background-size: 100% 1px; background-position-x: right; }
+    50%  { background-size: 0 1px; background-position-x: right; }
+    51%  { background-size: 0 1px; background-position-x: left; }
+    100% { background-size: 100% 1px; background-position-x: left; }
+}
+
+/* ---------- Floating pill navigation ---------- */
+.topbar {
+    position: fixed;
+    inset: .75rem 0 auto;
+    z-index: 40;
+    display: flex;
+    justify-content: center;
+    padding-inline: var(--gutter);
+    pointer-events: none; /* only the pill itself catches clicks */
+}
+
+.pill {
+    pointer-events: auto;
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: .15rem;
+    max-width: 100%;
+    padding: .3rem .4rem;
+    border: 1px solid rgba(247, 236, 221, .35);
+    border-radius: 999px;
+    /* A plain translucent fill: a live backdrop blur was costly to redraw on phones */
+    background: rgba(42, 8, 7, .5);
+}
+
+/* Solid layer that fades in while scrolling (opacity is animated on the GPU) */
+.pill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--oxblood-deep);
+    opacity: 0;
+    transition: opacity .5s ease;
+}
+
+/* Set by motion.js once the hero has scrolled away */
+.pill.is-solid::before { opacity: .8; }
+
+.pill__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 .9rem;
+    border-radius: 999px;
+    font-family: var(--sans-bold);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .3s ease, color .3s ease;
+}
+
+.pill__link:hover { background: rgba(247, 236, 221, .14); }
+
+.pill__link--wide { display: none; }
+
+.pill__link--cta {
+    background: var(--cream);
+    color: var(--ink);
+}
+
+.pill__link--cta:hover { background: var(--amber); }
+
+/* The wordmark in the middle of the pill */
+/* Plain inline text, so "Sunset" and "BRUNCH" share one baseline (the space
+   between them is in the HTML); the 44px line height centres them in the pill. */
+.pill__brand {
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
+    align-self: center;
+    padding: 0 1rem;
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pill__brand span {
+    font-family: var(--sans-bold);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+}
+
+/* ---------- 1. Hero: the golden sky ---------- */
+.hero {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 7rem var(--gutter) 12rem;
+    overflow: hidden;
+    text-align: center;
+    isolation: isolate;
+}
+
+/* The sky: one opaque picture, a painted sunset (AI-generated image supplied for the
+   project) whose bottom was baked to fade into oxblood.
+   A single opaque image is far cheaper for the browser than stacked transparent
+   cloud layers (Lighthouse mobile: blocking time dropped from seconds to ms).
+   Phones get the 1200 px version, large screens the 2400 px one. */
+.hero__sky {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #C8762E url("../img/hero-sky-1200.webp") center bottom / cover no-repeat;
+}
+
+.hero__content {
+    position: relative;
+    z-index: 1;
+    max-width: 44rem;
+    color: #FFF8EC;
+    /* a close shadow for crisp letters, a wide one to calm the bright clouds behind */
+    text-shadow: 0 1px 3px rgba(45, 12, 6, .45), 0 2px 30px rgba(70, 25, 12, .5);
+}
+
+.hero .eyebrow { color: #FFF4E0; }
+
+.hero__title {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: .9;
+}
+
+/* A mask around each title word: the word rises from below its edge */
+.hero__line {
+    display: block;
+    overflow: hidden;
+    padding-block: .06em;
+}
+
+.hero__line > span { display: inline-block; }
+
+.hero__thin {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(3.6rem, 1.8rem + 9vw, 8.5rem);
+    letter-spacing: .02em;
+}
+
+.hero__bold {
+    font-family: var(--sans-bold);
+    font-weight: 700;
+    font-size: clamp(3.2rem, 1.5rem + 8.6vw, 8rem);
+    letter-spacing: .01em;
+    text-transform: uppercase;
+}
+
+.hero__tagline {
+    margin: 1.5rem auto 0;
+    max-width: 30ch;
+    font-family: var(--serif);
+    font-size: clamp(1.25rem, 1.05rem + .8vw, 1.6rem);
+    line-height: 1.35;
+}
+
+.hero__times {
+    margin-top: .6rem;
+    font-size: .95rem;
+    opacity: .9;
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem 1.5rem;
+    margin-top: 2rem;
+}
+
+.hero .pill-button:hover { color: var(--ink); }
+
+/* The painted clouds that rise over the hero while scrolling. They sit at the top
+   of the next section (so the hero's edge never cuts them) and motion.js lifts
+   them up across the hero; they keep their whole natural shape and stay behind
+   the intro's text. Full window width; at least 40vw tall, so "cover" only ever
+   trims the (faded) sides of the picture, never its top or bottom.
+   Without motion this layer is never drawn (no download either). */
+.hero__bank {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 110vw;
+    margin-left: -55vw;
+    height: max(62vh, 40vw);
+    height: max(62svh, 40vw);
+    z-index: 0;
+    background: url("../img/clouds-pink-a-1000.webp") center bottom / cover no-repeat;
+    pointer-events: none;
+    display: none;
+}
+
+.has-motion .hero__bank { display: block; }
+
+/* Doves (hero and other sections): motion.js draws each painted dove once on its
+   own small <canvas> and moves it with transforms (cheap for the browser).
+   The layer spans the full window width, behind the section's content.
+   Without motion there are no doves. */
+.doves {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    margin-left: -50vw;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.doves canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+}
+
+/* Clouds may reach past the window's edges: cut them there, never a sideways scroll.
+   ("clip", unlike "hidden", keeps the sticky booking text working.) */
+main { overflow-x: clip; }
+
+/* Sections with clouds and doves: the real content sits above the decoration */
+.has-sky { position: relative; }
+
+.has-sky > :not(.deco) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Painted clouds placed at the edges of sections, away from the text.
+   Drawn only when motion runs; motion.js moves them at their own speed (parallax). */
+.cloud {
+    position: absolute;
+    z-index: 0;
+    aspect-ratio: 2000 / 727;
+    background: url("../img/clouds-pink-a-1000.webp") center / contain no-repeat;
+    pointer-events: none;
+    display: none;
+}
+
+.has-motion .cloud { display: block; }
+
+.cloud--b { background-image: url("../img/clouds-pink-b-1000.webp"); }
+
+/* Behind the riad arch, bottom right */
+.cloud--intro {
+    right: -40%;
+    bottom: -8%;
+    width: max(140%, 40rem);
+    opacity: .75;
+}
+
+/* Beside the menu title, top left */
+.cloud--menu {
+    left: -28%;
+    top: 0;
+    width: max(75%, 34rem);
+    opacity: .65;
+}
+
+/* After the last menu cards, bottom right, leading into the gallery */
+.cloud--menu-end {
+    right: -30%;
+    bottom: -14%;
+    width: max(85%, 38rem);
+    opacity: .7;
+}
+
+/* A fixed fade along the bottom edge of the hero: whatever moves inside
+   (sky, clouds) melts into the oxblood of the next section, never a hard line */
+.hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 18%;
+    z-index: 3;
+    background: linear-gradient(180deg, rgba(58, 13, 11, 0), var(--oxblood));
+    pointer-events: none;
+}
+
+/* ---------- 2. Intro: text and the arched "portal" photo ---------- */
+.intro {
+    display: grid;
+    gap: 3rem;
+    justify-items: center;
+    padding: 4rem var(--gutter) 6rem;
+    text-align: center;
+}
+/* Clouds and doves pass behind these texts while scrolling: a soft shadow keeps them readable */
+/* The rising clouds pass behind this text while scrolling: a soft shadow keeps it readable */
+.intro__text,
+.has-sky .section__head,
+.faq > .display,
+.faq__list,
+.booking__info { text-shadow: 0 1px 3px rgba(45, 12, 6, .5), 0 2px 24px rgba(58, 13, 11, .65); }
+
+.intro__lines {
+    margin-top: 1.25rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.3rem, 1.1rem + .9vw, 1.75rem);
+    line-height: 1.35;
+    color: var(--cream-soft);
+}
+
+.intro .pill-button { margin-top: 2rem; }
+
+/* The portal: a tall arch window onto the riad */
+.portal {
+    width: min(80vw, 26rem);
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border-radius: 999px 999px 18px 18px;
+    border: 1px solid rgba(244, 196, 107, .55);
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .6);
+}
+
+.portal__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- Sections ---------- */
+.section {
+    position: relative;
+    padding: 5rem var(--gutter);
+}
+
+.section__head {
+    max-width: 44rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.section__head .display { margin-top: 1rem; }
+
+.section__intro {
+    margin: 1rem auto 0;
+    max-width: 42ch;
+    color: var(--cream-soft);
+}
+
+/* ---------- 3. Menu ---------- */
+.dish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: 2.5rem 1.75rem;
+    max-width: 72rem;
+    margin: 3.5rem auto 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dish {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Each photo sits in an arched window, echoing the portal */
+.dish__window {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 999px 999px 0 0;
+    background: var(--ember);
+}
+
+.dish__window img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* the CSS "scale" property, so it adds to GSAP's entrance transform */
+    transition: scale .9s cubic-bezier(.16, 1, .3, 1);
+}
+
+.dish:hover .dish__window img { scale: 1.06; }
+
+.dish__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: 1.4rem 1.4rem 1.6rem;
+    border: 1px solid var(--line-dark);
+    border-top: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    /* nearly opaque, so clouds and doves passing behind never blur the text */
+    background: rgba(70, 20, 15, .94);
+}
+
+.dish__name {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.7rem;
+    line-height: 1.1;
+}
+
+.dish__description {
+    color: var(--cream-soft);
+    font-size: 1rem;
+}
+
+.dish__price {
+    margin-top: auto;
+    padding-top: .75rem;
+    font-family: var(--sans-bold);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .12em;
+    color: var(--amber);
+}
+
+.dish__price--pending {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.1rem;
+    letter-spacing: 0;
+    color: var(--cream-soft);
+}
+
+/* ---------- 4. Gallery strip ---------- */
+/* z-index: the Q&A's hanging clouds pass behind the photos, never over them */
+.gallery { padding-inline: 0; z-index: 1; }
+
+.gallery .section__head { padding-inline: var(--gutter); }
+
+.gallery__strip {
+    margin-top: 3rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(244, 196, 107, .6) transparent;
+    padding: 0 var(--gutter) 1.25rem;
+}
+
+.gallery__strip:focus-visible { outline-offset: -3px; }
+
+.gallery__list {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: max-content;
+}
+
+.gallery__item {
+    flex: none;
+    scroll-snap-align: center;
+    overflow: hidden;
+    border-radius: var(--radius);
+}
+
+.gallery__item img {
+    height: clamp(16rem, 52vh, 30rem);
+    width: auto;
+    object-fit: cover;
+    transition: scale .9s cubic-bezier(.16, 1, .3, 1);
+}
+
+.gallery__item:hover img { scale: 1.04; }
+
+/* ---------- 5. Q&A ---------- */
+.faq { text-align: center; overflow-x: clip; }
+
+/* Painted clouds hanging over the top of the Q&A (only their lower half shows,
+   the gallery sits above them). Drawn only when motion runs; motion.js makes
+   them sink and drift. */
+.cloudbank {
+    position: absolute;
+    left: -5%;
+    width: 110%;
+    pointer-events: none;
+    display: none;
+}
+
+.has-motion .cloudbank { display: block; }
+
+.cloudbank--hang {
+    top: -6rem;
+    height: clamp(260px, 46vw, 660px);
+    opacity: .7;
+    background: url("../img/clouds-pink-b-1000.webp") center bottom / cover no-repeat;
+}
+
+.faq__list {
+    display: grid;
+    gap: 2.25rem;
+    max-width: 64rem;
+    margin: 3rem auto 0;
+    text-align: left;
+}
+
+.faq__item {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line-dark);
+}
+
+.faq__item dt {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--amber);
+}
+
+.faq__item dd {
+    margin-top: .5rem;
+    color: var(--cream-soft);
+}
+
+/* ---------- 6. Booking ---------- */
+.booking {
+    overflow: hidden;
+    padding-bottom: 7rem;
+}
+
+.booking__layout {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 2.5rem;
+    max-width: 72rem;
+    margin: 0 auto;
+}
+
+.booking__info { text-align: center; }
+
+.booking__info .display { margin-top: 1rem; }
+
+/* Painted clouds rising at the bottom of the page, fading into oxblood */
+.booking__glow {
+    position: absolute;
+    left: -5%;
+    right: -5%;
+    bottom: -2px;
+    height: min(56vw, 520px);
+    opacity: 1;
+    background:
+        linear-gradient(180deg, rgba(58, 13, 11, 0) 35%, var(--oxblood) 100%) no-repeat,
+        url("../img/clouds-pink-a-1000.webp") center top / cover no-repeat;
+    pointer-events: none;
+}
+
+/* ---------- Booking form (states are set by booking.js) ---------- */
+.booking-form {
+    padding: 1.5rem var(--gutter);
+    margin-inline: calc(var(--gutter) * -1);
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: var(--radius);
+    box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .7);
+}
+
+.booking-form :focus-visible { outline-color: var(--focus-on-light); }
+
+.form-grid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 0;
+}
+
+.field label,
+.field legend {
+    font-weight: 600;
+}
+
+.field__optional,
+.field__hint {
+    font-weight: 400;
+    font-size: .9375rem;
+    color: var(--ink-soft);
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: .65rem .8rem;
+    font: inherit; /* 16px+ also stops iOS from zooming into fields */
+    color: var(--ink);
+    background: #FFFDF9;
+    border: 1.5px solid #B99C86;
+    border-radius: 10px;
+}
+
+.field textarea { resize: vertical; }
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+    outline: 3px solid var(--focus-on-light);
+    outline-offset: 1px;
+    border-color: var(--focus-on-light);
+}
+
+/* Date fields: Chrome's calendar icon is its own keyboard stop, and the field does not
+   match :focus while it has focus, but it does match :focus-within. */
+.field input[type="date"]:focus-within {
+    outline: 3px solid var(--focus-on-light);
+    outline-offset: 1px;
+    border-color: var(--focus-on-light);
+}
+
+.field [aria-invalid="true"] { border-color: var(--error); }
+
+.field__error {
+    color: var(--error);
+    font-size: .9375rem;
+    font-weight: 600;
+}
+
+.field__error:empty { display: none; }
+
+/* Sitting picker: real radio buttons drawn as tappable pills */
+.slots {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.slots legend {
+    padding: 0;
+    margin-bottom: .35rem;
+}
+
+.slots__options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .5rem;
+}
+
+/* Visually hidden but focusable; clicks go to the label */
+.slots__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    appearance: none;
+    pointer-events: none;
+}
+
+.slots__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border: 1.5px solid #B99C86;
+    border-radius: 999px;
+    font-family: var(--sans-bold);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .06em;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.slots__label:hover { border-color: var(--oxblood); }
+
+.slots__input:checked + .slots__label {
+    background: var(--oxblood);
+    border-color: var(--oxblood);
+    color: var(--cream);
+}
+
+.slots__input:focus-visible + .slots__label {
+    outline: 3px solid var(--focus-on-light);
+    outline-offset: 2px;
+}
+
+/* A sitting that has already started today cannot be chosen */
+.slots__input:disabled + .slots__label {
+    opacity: .45;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.slots[aria-invalid="true"] .slots__label { border-color: var(--error); }
+
+/* Honeypot: never shown, never autofilled */
+.hp { display: none; }
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: .85rem 2rem .75rem;
+    border: 0;
+    border-radius: 999px;
+    font-family: var(--sans-bold);
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color .2s ease, transform .2s ease;
+}
+
+.button--primary {
+    background: var(--oxblood);
+    color: var(--cream);
+}
+
+.button--primary:hover { background: var(--ember); }
+
+.button--primary:active { transform: translateY(1px); }
+
+.button:disabled { opacity: .6; cursor: progress; }
+
+.booking-form__submit {
+    width: 100%;
+    margin-top: 1.75rem;
+}
+
+.form-status:empty { display: none; }
+
+.form-status {
+    margin-top: 1.25rem;
+    padding: .9rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.form-status--success { background: var(--success-bg); color: var(--success); }
+.form-status--error { background: var(--error-bg); color: var(--error); }
+
+/* ---------- Footer ---------- */
+.site-footer {
+    display: grid;
+    gap: .35rem;
+    justify-items: center;
+    padding: 2.5rem var(--gutter) 3rem;
+    background: var(--oxblood-deep);
+    text-align: center;
+}
+
+.site-footer__brand {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+}
+
+.site-footer__brand span {
+    margin-left: .35em;
+    font-family: var(--sans-bold);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+}
+
+.site-footer__meta {
+    font-family: var(--sans-bold);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--cream-soft);
+}
+
+/* ---------- Tablet (≥ 40rem) ---------- */
+@media (min-width: 40rem) {
+    :root { --gutter: 2rem; }
+
+    .pill__link--wide { display: inline-flex; }
+
+
+    .section { padding-block: 6.5rem; }
+
+    .booking-form {
+        margin-inline: 0;
+        padding: 2.25rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem 1.5rem;
+    }
+
+    .field--full { grid-column: 1 / -1; }
+
+    .booking-form__submit { width: auto; }
+
+    .faq__list { grid-template-columns: 1fr 1fr; gap: 2.5rem 3.5rem; }
+}
+
+/* ---------- Desktop (≥ 64rem) ---------- */
+@media (min-width: 64rem) {
+    /* Large screens: the 2400 px pictures */
+    .hero__sky { background-image: url("../img/hero-sky-2400.webp"); }
+
+    /* (background-image only: sizes, positions and repeats come from the rules above) */
+    .booking__glow {
+        background-image:
+            linear-gradient(180deg, rgba(58, 13, 11, 0) 35%, var(--oxblood) 100%),
+            url("../img/clouds-pink-a-2000.webp");
+    }
+
+    .hero__bank { background-image: url("../img/clouds-pink-a-2000.webp"); }
+
+    .cloudbank--hang { background-image: url("../img/clouds-pink-b-2000.webp"); }
+
+    .cloud { background-image: url("../img/clouds-pink-a-2000.webp"); }
+
+    .cloud--b { background-image: url("../img/clouds-pink-b-2000.webp"); }
+
+    .cloud--intro { right: -18%; bottom: -14%; width: 80%; }
+
+    /* Large screens: the frosted pill of the template (a cost phones are spared) */
+    .pill {
+        -webkit-backdrop-filter: blur(14px) saturate(1.15);
+        backdrop-filter: blur(14px) saturate(1.15);
+    }
+
+    .intro {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        max-width: 72rem;
+        margin: 0 auto;
+        padding-block: 5rem 3rem;
+        text-align: left;
+    }
+
+    .intro__text { justify-self: end; max-width: 28rem; }
+
+    .portal { justify-self: start; width: min(34vw, 28rem); }
+
+    .booking__layout {
+        grid-template-columns: 5fr 7fr;
+        gap: 4rem;
+        align-items: start;
+    }
+
+    .booking__info {
+        position: sticky;
+        top: 7rem;
+        text-align: left;
+    }
+}
+
+/* ==========================================================================
+   Motion (CSS part)
+   - The hero entrance runs in CSS, so it starts with the first paint,
+     before any script has loaded.
+   - Everything linked to scrolling lives in assets/js/motion.js.
+   - Nothing moves for people who ask for reduced motion.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+    /* The two title words rise from behind their masks, then the rest follows */
+    .hero__line > span {
+        animation: line-up 1.2s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .hero__line + .hero__line > span { animation-delay: .08s; }
+
+    .hero__content > :not(.hero__title) {
+        animation: rise 1s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .hero__content > .eyebrow { animation-delay: 0s; }
+    .hero__tagline { animation-delay: .12s; }
+    .hero__times { animation-delay: .16s; }
+    .hero__actions { animation-delay: .2s; }
+
+    /* Without the smooth-scroll script, in-page links still glide */
+    html:not(.lenis) { scroll-behavior: smooth; }
+}
+
+@keyframes line-up {
+    from { transform: translateY(105%); }
+}
+
+@keyframes rise {
+    /* no fade: the text is readable from the very first paint, it only slides into place */
+    from { transform: translateY(28px); }
+}
+
+/* Lenis (smooth scrolling) needs the browser's own smooth scrolling off */
+html.lenis,
+html.lenis body { height: auto; }
+
+.lenis.lenis-stopped { overflow: clip; }
+
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* A section receives focus after an in-page link: no ring around the whole section */
+main section[tabindex="-1"]:focus,
+main[tabindex="-1"]:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}

@@ -1,41 +1,50 @@
 <?php
 /**
- * The six brunch dishes shown on the landing page.
+ * The six brunch formulas shown on the landing page.
  *
- * Sample content written for the technical test (the restaurant is fictional).
- * Kept as data so the page and, later, the SEO schema read the same list.
- * Prices are in Moroccan dirhams (MAD).
+ * Descriptions only mention what the photos show.
+ * Prices in Moroccan dirhams (MAD). null = price not provided yet: the page
+ * then shows "Price coming soon" and the SEO schema leaves the price out.
+ *
+ * 'image' is the base name of the photo in public/assets/img/
+ * (the page uses its -480 and -800 WebP versions).
  */
 
 return [
     [
-        'name'        => 'Msemen with amlou',
-        'description' => 'Flaky griddled msemen served with amlou: roasted almonds, argan oil and honey.',
-        'price'       => 45,
+        'name'        => 'Continental breakfast',
+        'description' => 'Croissants and bread rolls, an omelette with green salad, yogurt, fresh orange juice and a hot drink.',
+        'price'       => null,
+        'image'       => 'bf-continentale',
     ],
     [
-        'name'        => 'Baghrir with honey butter',
-        'description' => 'Semolina pancakes with a thousand holes, warm honey butter and seasonal fruit.',
-        'price'       => 50,
+        'name'        => 'Marrakech breakfast',
+        'description' => 'Fried eggs with khlii, Moroccan pancakes with honey and butter, olives, and mint tea poured from a silver teapot.',
+        'price'       => null,
+        'image'       => 'bf-marrakech',
     ],
     [
-        'name'        => 'Bissara',
-        'description' => 'Split fava bean soup finished with cumin, paprika and olive oil, with village bread.',
-        'price'       => 40,
+        'name'        => 'Mediterranean breakfast',
+        'description' => 'Cucumber, cherry tomatoes and white cheese dressed with olive oil and herbs, served with black olives.',
+        'price'       => null,
+        'image'       => 'bf-mediterranee',
     ],
     [
-        'name'        => 'Eggs with khlii',
-        'description' => 'Eggs cooked in a small clay tagine with khlii, the slow-preserved spiced beef of Fes.',
-        'price'       => 75,
+        'name'        => 'Brunch buffet',
+        'description' => 'A generous buffet of fresh salads, savoury dishes, pastries and sweet bites to enjoy at your own pace.',
+        'price'       => null,
+        'image'       => 'bf-buffet',
     ],
     [
-        'name'        => 'Kefta and egg tagine',
-        'description' => 'Spiced beef meatballs simmered in tomato sauce, with eggs baked on top.',
-        'price'       => 85,
+        'name'        => 'Fresh juice bar',
+        'description' => 'A row of freshly pressed juices, from classic orange to green and red blends.',
+        'price'       => null,
+        'image'       => 'jus',
     ],
     [
-        'name'        => 'Sardines with chermoula',
-        'description' => 'Atlantic sardines grilled with coriander, garlic and lemon, on toasted khobz.',
-        'price'       => 70,
+        'name'        => 'Yogurts and fruit verrines',
+        'description' => 'Little glasses of fresh fruit and creamy yogurt, prepared for the brunch table.',
+        'price'       => null,
+        'image'       => 'verrines',
     ],
 ];

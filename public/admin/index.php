@@ -50,7 +50,8 @@ $flash = take_flash();
 <body class="admin-page">
     <header class="admin-bar">
         <!-- Back to the full list, filters cleared -->
-        <a class="admin-bar__brand" href="index.php">Sunset Brunch <span>back-office</span></a>
+        <!-- The logo leads to the public home page -->
+        <a class="admin-bar__brand" href="../">Sunset Brunch <span>back-office</span></a>
         <div class="admin-bar__user">
             <span>Signed in as <strong><?= e(Auth::username()) ?></strong></span>
             <form method="post" action="logout.php">

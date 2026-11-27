@@ -12,10 +12,12 @@ $maxDate = BookingCalendar::lastBookableDate()->format('Y-m-d');
 $pageTitle = 'Sunset Brunch, Tanger: book a table for Sunday brunch';
 $pageDescription = 'Moroccan brunch classics every Sunday in Tanger. Three sittings at 12:00, 13:30 and 15:00. Book your table online.';
 $shareImage = app_url('assets/img/og-image.jpg');
-$prices = array_column($menu, 'price');
+
+// Only prices that have been provided count (null = not provided yet).
+$prices = array_values(array_filter(array_column($menu, 'price'), static fn ($price) => $price !== null));
 
 // Restaurant structured data (schema.org) for search engines. Only facts the
-// site really has: no street address or closing time is invented.
+// site really has: no street address, closing time or missing price is invented.
 $restaurantSchema = [
     '@context'            => 'https://schema.org',
     '@type'               => 'Restaurant',
@@ -24,7 +26,6 @@ $restaurantSchema = [
     'url'                 => app_url(),
     'image'               => $shareImage,
     'servesCuisine'       => ['Moroccan', 'Brunch'],
-    'priceRange'          => min($prices) . '–' . max($prices) . ' MAD',
     'acceptsReservations' => app_url('#booking'),
     'address'             => [
         '@type'           => 'PostalAddress',
@@ -37,15 +38,39 @@ $restaurantSchema = [
         'hasMenuSection' => [
             '@type'       => 'MenuSection',
             'name'        => 'Brunch',
-            'hasMenuItem' => array_map(static fn (array $dish): array => [
+            'hasMenuItem' => array_map(static fn (array $dish): array => array_filter([
                 '@type'       => 'MenuItem',
                 'name'        => $dish['name'],
                 'description' => $dish['description'],
-                'offers'      => ['@type' => 'Offer', 'price' => (string) $dish['price'], 'priceCurrency' => 'MAD'],
-            ], $menu),
+                'offers'      => $dish['price'] === null ? null : ['@type' => 'Offer', 'price' => (string) $dish['price'], 'priceCurrency' => 'MAD'],
+            ]), $menu),
         ],
     ],
 ];
+if ($prices !== []) {
+    $restaurantSchema['priceRange'] = min($prices) . '–' . max($prices) . ' MAD';
+}
+
+// Photos for the gallery strip: file base, available widths, size of the largest, description.
+$gallery = [
+    ['riad', [800, 1200], 1200, 800, 'Riad courtyard with white galleries, green plants and laid tables'],
+    ['gal-01', [640, 1280], 1280, 852, 'Brunch table with eggs, pancakes, pastries and fresh juices'],
+    ['the', [360, 455], 455, 595, 'Mint tea poured from high in the traditional way'],
+    ['gal-04', [640, 1280], 1280, 852, 'Zellige table laid with a full Moroccan breakfast'],
+    ['food-04', [640, 1280], 1280, 1920, 'Burrata with cherry tomatoes and a drizzle of balsamic'],
+    ['patio', [480, 800], 800, 681, 'Patio corner with plants and a mosaic table'],
+    ['oud', [360, 455], 455, 595, 'Musician playing the oud'],
+    ['gal-06', [640, 1280], 1280, 852, 'Sharing plates with eggs, vegetables and avocado'],
+    ['drink-13', [640, 1280], 1280, 1920, 'Frothy drink garnished with dried flowers'],
+    ['terrasse', [360, 455], 455, 595, 'Terrace with lanterns and lounge seating'],
+    ['jars', [480, 800], 800, 533, 'Jars of nuts and dried fruit on the buffet'],
+];
+
+/** srcset attribute for a photo available in several widths: "x-480.webp 480w, x-800.webp 800w". */
+function srcset(string $base, array $widths): string
+{
+    return implode(', ', array_map(static fn (int $w): string => "assets/img/{$base}-{$w}.webp {$w}w", $widths));
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -54,7 +79,7 @@ $restaurantSchema = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle) ?></title>
     <meta name="description" content="<?= e($pageDescription) ?>">
-    <meta name="theme-color" content="#12355B">
+    <meta name="theme-color" content="#3A0D0B">
     <link rel="canonical" href="<?= e(app_url()) ?>">
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 
@@ -67,92 +92,185 @@ $restaurantSchema = [
     <meta property="og:image" content="<?= e($shareImage) ?>">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Illustration of the Strait of Gibraltar at sunset seen from the Tanger medina">
+    <meta property="og:image:alt" content="Sunset Brunch: a golden sky above warm clouds">
     <meta property="og:locale" content="en_GB">
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- JSON_HEX_TAG turns < and > into < / >, so no value can close this <script> early -->
     <script type="application/ld+json"><?= json_encode($restaurantSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_PRETTY_PRINT) ?></script>
 
-    <link rel="preload" href="assets/fonts/josefin-sans-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/img/hero-strait.webp" as="image" type="image/webp">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="preload" href="assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- The sky picture is the largest thing on the first screen: fetch it early,
+         at the size each screen uses (same 64rem breakpoint as site.css). -->
+    <link rel="preload" href="assets/img/hero-sky-1200.webp" as="image" type="image/webp" media="(max-width: 63.99rem)">
+    <link rel="preload" href="assets/img/hero-sky-2400.webp" as="image" type="image/webp" media="(min-width: 64rem)">
+    <link rel="stylesheet" href="assets/css/site.css">
     <!-- type="module" runs the script after the HTML is parsed (like defer) and keeps its variables private. -->
     <script type="module" src="assets/js/booking.js"></script>
+    <!-- Scroll motion (GSAP + Lenis, self-hosted): loads its libraries after the page, skipped for reduced motion -->
+    <script type="module" src="assets/js/motion.js"></script>
 </head>
 <body>
     <a class="skip-link" href="#booking">Skip to the booking form</a>
 
-    <header class="site-header">
-        <a class="brand" href="#top">Sunset Brunch</a>
-        <nav aria-label="Main">
-            <ul class="nav-list">
-                <li class="nav-optional"><a href="#menu">Menu</a></li>
-                <li><a href="#booking">Book a table</a></li>
-            </ul>
+    <!-- Floating pill navigation, wordmark in the middle -->
+    <header class="topbar">
+        <nav class="pill" aria-label="Main">
+            <a class="pill__link" href="#menu">Menu</a>
+            <a class="pill__link pill__link--wide" href="#gallery">Gallery</a>
+            <a class="pill__brand" href="#top">Sunset <span>Brunch</span></a>
+            <a class="pill__link pill__link--wide" href="#faq">Q&amp;A</a>
+            <a class="pill__link pill__link--cta" href="#booking">Book</a>
         </nav>
     </header>
 
     <main id="top">
-        <!-- 1. Hero -->
+        <!-- 1. Hero: golden sky -->
         <section class="hero" aria-labelledby="hero-title">
+            <!-- Sky, sun glow and clouds are one opaque picture (fast to draw), whose bottom
+                 fades into the oxblood of the next section -->
+            <div class="hero__sky" aria-hidden="true"></div>
+            <!-- Doves flying across the sky, behind the title (filled by motion.js) -->
+            <div class="doves hero__doves deco" data-flock="hero" aria-hidden="true"></div>
+
             <div class="hero__content">
-                <h1 class="hero__title" id="hero-title">Sunset Brunch</h1>
+                <p class="eyebrow">Every Sunday in Tanger</p>
+                <!-- Each word sits in a mask so it can rise into view -->
+                <h1 class="hero__title" id="hero-title">
+                    <span class="hero__line"><span class="hero__thin">Sunset</span></span>
+                    <span class="hero__line"><span class="hero__bold">Brunch</span></span>
+                </h1>
                 <p class="hero__tagline">Moroccan brunch classics, served slowly every Sunday in Tanger.</p>
-                <p class="hero__times">Three sittings each Sunday: 12:00, 13:30 and 15:00.</p>
+                <p class="hero__times">Three sittings: 12:00, 13:30 and 15:00.</p>
                 <div class="hero__actions">
-                    <a class="button button--primary" href="#booking">Book a table</a>
-                    <a class="hero__link" href="#menu">See the menu</a>
+                    <a class="pill-button" href="#booking">Book a table</a>
+                    <a class="text-link" href="#menu">See the menu</a>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Menu -->
-        <section class="section menu" id="menu" aria-labelledby="menu-title">
-            <div class="container">
-                <h2 class="section__title" id="menu-title">The Sunday menu</h2>
-                <p class="section__intro">Six dishes from the Moroccan breakfast table, made to share.</p>
+        <!-- 2. Intro: the portal -->
+        <section class="intro has-sky" aria-labelledby="intro-title">
+            <!-- Decoration (drawn only when motion runs): painted clouds and a dove.
+                 hero__bank: the clouds that rise over the hero title while scrolling.
+                 They live here, after the hero, so they are never cut by its edge. -->
+            <div class="hero__bank deco" aria-hidden="true"></div>
+            <div class="cloud cloud--intro deco" aria-hidden="true"></div>
+            <div class="doves deco" data-flock="intro" aria-hidden="true"></div>
+            <div class="intro__text reveal">
+                <h2 class="display" id="intro-title" data-split>A slow Sunday</h2>
+                <p class="intro__lines" data-split>From the first coffee<br>to the last glass of mint tea,<br>brunch is never rushed.</p>
+                <a class="pill-button pill-button--small" href="#menu">See the menu</a>
+            </div>
+            <figure class="portal">
+                <img class="portal__img" src="assets/img/riad-800.webp"
+                     srcset="<?= e(srcset('riad', [800, 1200, 1600])) ?>"
+                     sizes="(min-width: 64rem) 34vw, 80vw"
+                     width="1600" height="1067" loading="lazy" decoding="async"
+                     alt="Riad courtyard with white galleries, green plants and laid tables">
+            </figure>
+        </section>
 
-                <ul class="dish-grid" role="list">
-                    <?php foreach ($menu as $dish): ?>
-                        <li class="dish">
-                            <div class="dish__window" aria-hidden="true"></div>
-                            <div class="dish__body">
-                                <h3 class="dish__name"><?= e($dish['name']) ?></h3>
-                                <p class="dish__description"><?= e($dish['description']) ?></p>
+        <!-- 3. Menu -->
+        <section class="section menu has-sky" id="menu" aria-labelledby="menu-title">
+            <div class="cloud cloud--b cloud--menu deco" aria-hidden="true"></div>
+            <div class="cloud cloud--menu-end deco" aria-hidden="true"></div>
+            <div class="doves deco" data-flock="menu" aria-hidden="true"></div>
+            <header class="section__head reveal">
+                <p class="eyebrow">The Sunday menu</p>
+                <h2 class="display" id="menu-title" data-split>Six ways to start a Sunday</h2>
+                <p class="section__intro">Breakfasts and brunch favourites, made to share.</p>
+            </header>
+
+            <ul class="dish-grid" role="list">
+                <?php foreach ($menu as $dish): ?>
+                    <li class="dish">
+                        <div class="dish__window">
+                            <img src="assets/img/<?= e($dish['image']) ?>-480.webp"
+                                 srcset="<?= e(srcset($dish['image'], [480, 800])) ?>"
+                                 sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 45vw, 90vw"
+                                 width="800" height="450" loading="lazy" decoding="async"
+                                 alt="<?= e($dish['name']) ?>">
+                        </div>
+                        <div class="dish__body">
+                            <h3 class="dish__name"><?= e($dish['name']) ?></h3>
+                            <p class="dish__description"><?= e($dish['description']) ?></p>
+                            <?php if ($dish['price'] !== null): ?>
                                 <p class="dish__price"><data value="<?= e($dish['price']) ?>"><?= e($dish['price']) ?> MAD</data></p>
-                            </div>
+                            <?php else: ?>
+                                <p class="dish__price dish__price--pending">Price coming soon</p>
+                            <?php endif; ?>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+
+        <!-- 4. Gallery: a horizontal strip of photos -->
+        <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
+            <header class="section__head reveal">
+                <p class="eyebrow">Gallery</p>
+                <h2 class="display" id="gallery-title" data-split>Around the table</h2>
+            </header>
+            <!-- tabindex="0": keyboard users can focus the strip and scroll it with the arrow keys -->
+            <div class="gallery__strip" tabindex="0" role="region" aria-label="Photo gallery, scroll sideways">
+                <ul class="gallery__list" role="list">
+                    <?php foreach ($gallery as [$base, $widths, $w, $h, $alt]): ?>
+                        <li class="gallery__item">
+                            <img src="assets/img/<?= e($base) ?>-<?= $widths[0] ?>.webp"
+                                 srcset="<?= e(srcset($base, $widths)) ?>"
+                                 sizes="(min-width: 64rem) 40vw, 80vw"
+                                 width="<?= $w ?>" height="<?= $h ?>" loading="lazy" decoding="async"
+                                 alt="<?= e($alt) ?>">
                         </li>
                     <?php endforeach; ?>
                 </ul>
             </div>
         </section>
 
-        <!-- 3. Booking -->
-        <section class="section booking" id="booking" aria-labelledby="booking-title">
-            <div class="container booking__layout">
-                <div class="booking__info">
-                    <h2 class="section__title" id="booking-title">Book a table</h2>
-                    <p class="section__intro">Choose a Sunday and a sitting. After you send your request, our team reviews it and confirms your table.</p>
-                    <dl class="facts">
-                        <div>
-                            <dt>Sittings</dt>
-                            <dd><?= e(implode(', ', $slots)) ?></dd>
-                        </div>
-                        <div>
-                            <dt>Group size</dt>
-                            <dd><?= e(config('booking.min_guests')) ?> to <?= e(config('booking.max_guests')) ?> guests per booking</dd>
-                        </div>
-                        <div>
-                            <dt>How far ahead</dt>
-                            <dd>Up to <?= e(config('booking.booking_window_days')) ?> days</dd>
-                        </div>
-                    </dl>
+        <!-- 5. Q&A: practical answers, all taken from the booking rules -->
+        <section class="section faq has-sky" id="faq" aria-labelledby="faq-title">
+            <div class="doves deco" data-flock="faq" aria-hidden="true"></div>
+            <!-- Dusk clouds hanging over the section (only drawn when motion runs) -->
+            <div class="cloudbank cloudbank--hang deco" aria-hidden="true"></div>
+            <h2 class="display reveal" id="faq-title" data-split>Q&amp;A</h2>
+            <dl class="faq__list">
+                <div class="faq__item">
+                    <dt>When is brunch served?</dt>
+                    <dd>Every Sunday, in three sittings: <?= e(implode(', ', array_slice($slots, 0, -1))) ?> and <?= e(end($slots)) ?>.</dd>
                 </div>
+                <div class="faq__item">
+                    <dt>How many guests can I book for?</dt>
+                    <dd>From <?= e(config('booking.min_guests')) ?> to <?= e(config('booking.max_guests')) ?> guests per booking.</dd>
+                </div>
+                <div class="faq__item">
+                    <dt>How far ahead can I book?</dt>
+                    <dd>Up to <?= e(config('booking.booking_window_days')) ?> days ahead. On a Sunday, you can still book for a sitting that has not started yet.</dd>
+                </div>
+                <div class="faq__item">
+                    <dt>Is my table confirmed straight away?</dt>
+                    <dd>You receive a booking reference as soon as you send the form. Our team then reviews your request and confirms your table.</dd>
+                </div>
+                <div class="faq__item">
+                    <dt>Allergies, a high chair, a birthday?</dt>
+                    <dd>Tell us in the message field of the booking form.</dd>
+                </div>
+            </dl>
+        </section>
+
+        <!-- 6. Booking -->
+        <section class="section booking has-sky" id="booking" aria-labelledby="booking-title">
+            <div class="doves deco" data-flock="booking" aria-hidden="true"></div>
+            <div class="booking__layout">
+                <header class="booking__info reveal">
+                    <p class="eyebrow">Reservations</p>
+                    <h2 class="display" id="booking-title" data-split>Book a table</h2>
+                    <p class="section__intro">Choose a Sunday and a sitting. After you send your request, our team reviews it and confirms your table.</p>
+                </header>
 
                 <!--
                     novalidate: the browser's own error bubbles are switched off because
-                    booking.js (Phase 3) shows clearer messages. The server checks everything again.
+                    booking.js shows clearer messages. The server checks everything again.
                     The data-* attributes pass the booking rules from PHP config to JavaScript.
                 -->
                 <form class="booking-form" id="booking-form" action="api/book.php" method="post" novalidate
@@ -241,15 +359,14 @@ $restaurantSchema = [
                     <p class="form-status" id="form-status" role="status" aria-live="polite" tabindex="-1"></p>
                 </form>
             </div>
+            <div class="booking__glow deco" aria-hidden="true"></div>
         </section>
     </main>
 
     <footer class="site-footer">
-        <div class="container site-footer__inner">
-            <p class="site-footer__brand">Sunset Brunch</p>
-            <p>Sunday brunch in Tanger, Morocco.</p>
-            <p>&copy; <?= date('Y') ?> Sunset Brunch</p>
-        </div>
+        <p class="site-footer__brand">Sunset<span>Brunch</span></p>
+        <p class="site-footer__meta">Sunday brunch in Tanger, Morocco</p>
+        <p class="site-footer__meta">&copy; <?= date('Y') ?> Sunset Brunch</p>
     </footer>
 </body>
 </html>
